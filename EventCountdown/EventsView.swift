@@ -7,12 +7,79 @@
 
 import SwiftUI
 
+
 struct EventsView: View {
+    
+    @State var events: [Event]?
+    @State var isAddingNewEvent = false
+    
+    var sortedEvents: [Event] {
+        events?.sorted() ?? []
+    }
+
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        NavigationView {
+            List {
+                ForEach(sortedEvents) {event in
+                    NavigationLink(destination: EventsForm(event: event, onSave: { updatedEvent in
+                        if let index = events?.firstIndex(where: { $0.id == updatedEvent.id }) {
+                            events?[index] = updatedEvent}
+                    })) {
+                        EventRow(event: event)
+                    }
+                    .swipeActions {
+                        if events != nil {
+                            Button(role: .destructive) {
+                                delete(event: event)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Events")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(action: {
+                        isAddingNewEvent = true
+                    }) {
+                        Image(systemName: "plus")
+                    }
+                }
+            }
+            .sheet(isPresented: $isAddingNewEvent, content: {
+                EventsForm(onSave: { newEvent in
+                    if let index = events?.firstIndex(where: { $0.id == newEvent.id }) {
+                        events?[index] = newEvent
+                    } else {
+                        if events != nil {
+                            events?.append(newEvent)
+                        } else {
+                            events = [newEvent]
+                        }
+                    }
+                    isAddingNewEvent = false
+                })
+            })
+        }
+    }
+    
+    func delete(event: Event) {
+        if let index = events?.firstIndex(where: { $0.id == event.id }) {
+            events?.remove(at: index)
+        }
     }
 }
 
+//#Preview {
+//    EventsView()
+//}
+
 #Preview {
-    EventsView()
+    EventsView(events: [
+        Event(title: "Christmas", textColor: .red, date: Date().addingTimeInterval(3600)),
+        Event(title: "New Year", textColor: .blue, date: Date().addingTimeInterval(7200)),
+        Event(title: "Birthday", textColor: .green, date: Date().addingTimeInterval(100800))
+    ])
 }
