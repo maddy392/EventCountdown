@@ -18,13 +18,10 @@ struct EventsView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
                 ForEach(sortedEvents) {event in
-                    NavigationLink(destination: EventsForm(event: event, onSave: { updatedEvent in
-                        if let index = events?.firstIndex(where: { $0.id == updatedEvent.id }) {
-                            events?[index] = updatedEvent}
-                    })) {
+                    NavigationLink(value: event) {
                         EventRow(event: event)
                     }
                     .swipeActions {
@@ -62,6 +59,13 @@ struct EventsView: View {
                     isAddingNewEvent = false
                 })
             })
+            .navigationDestination(for: Event.self) { event in
+                EventsForm(event: event) { updatedEvent in
+                    if let index = events?.firstIndex(where: {$0.id == updatedEvent.id}) {
+                        events?[index] = updatedEvent
+                    }
+                }
+            }
         }
     }
     
